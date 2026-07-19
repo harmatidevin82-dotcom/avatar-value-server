@@ -23,30 +23,37 @@ app.get("/avatar-value/:userId", async (req, res) => {
 
     const avatarData = await avatarResponse.json();
 
+    const itemResponse = await fetch(
+      "https://catalog.roblox.com/v1/catalog/items/details",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          items: avatarData.assetIds.map((id) => ({
+            itemType: 1,
+            id: id
+          }))
+        })
+      }
+    );
+
+    const itemData = await itemResponse.json();
+
     let totalValue = 0;
     const items = [];
 
-    for (const assetId of avatarData.assetIds) {
-      try {
-        const itemResponse = await fetch(
-          `https://economy.roblox.com/v2/assets/${assetId}/details`
-        );
+    for (const item of itemData.data || []) {
+      const price = item.price || 0;
 
-        if (!itemResponse.ok) continue;
+      totalValue += price;
 
-        const item = await itemResponse.json();
-        const price = item.PriceInRobux || 0;
-
-        totalValue += price;
-
-        items.push({
-          id: assetId,
-          name: item.Name,
-          price: price
-        });
-      } catch (error) {
-        console.log(`Could not load asset ${assetId}`);
-      }
+      items.push({
+        id: item.id,
+        name: item.name,
+        price: price
+      });
     }
 
     res.json({
