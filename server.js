@@ -12,16 +12,18 @@ app.get("/avatar-value/:userId", async (req, res) => {
     const userId = req.params.userId;
 
     const avatarResponse = await fetch(
-      `https://avatar.roblox.com/v1/users/${userId}/currently-wearing`
+      `https://avatar.roblox.com/v1/users/${userId}/avatar`
     );
 
     if (!avatarResponse.ok) {
       return res.status(404).json({
-        error: "Roblox user not found"
+        error: "Avatar not found"
       });
     }
 
     const avatarData = await avatarResponse.json();
+
+    const assetIds = avatarData.assets.map((asset) => asset.id);
 
     const itemResponse = await fetch(
       "https://catalog.roblox.com/v1/catalog/items/details",
@@ -31,7 +33,7 @@ app.get("/avatar-value/:userId", async (req, res) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          items: avatarData.assetIds.map((id) => ({
+          items: assetIds.map((id) => ({
             itemType: "Asset",
             id: id
           }))
@@ -52,8 +54,7 @@ app.get("/avatar-value/:userId", async (req, res) => {
       items.push({
         id: item.id,
         name: item.name,
-        price: price,
-        priceStatus: item.priceStatus || null
+        price: price
       });
     }
 
