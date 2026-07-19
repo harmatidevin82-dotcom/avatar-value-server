@@ -12,7 +12,7 @@ app.get("/avatar-value/:userId", async (req, res) => {
     const userId = req.params.userId;
 
     const avatarResponse = await fetch(
-      `https://avatar.roblox.com/v1/users/${userId}/avatar`
+      https://avatar.roblox.com/v2/avatar/users/${userId}/avatar
     );
 
     if (!avatarResponse.ok) {
