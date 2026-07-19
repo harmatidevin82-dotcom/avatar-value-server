@@ -12,58 +12,14 @@ app.get("/avatar-value/:userId", async (req, res) => {
     const userId = req.params.userId;
 
     const avatarResponse = await fetch(
-      `https://avatar.roblox.com/v1/users/${userId}/currently-wearing`
+      `https://avatar.roblox.com/v1/users/${userId}/avatar`
     );
 
     const avatarData = await avatarResponse.json();
 
-    const items = [];
-    let totalValue = 0;
-
-    for (const assetId of avatarData.assetIds) {
-      try {
-        const itemResponse = await fetch(
-          "https://catalog.roblox.com/v1/catalog/items/details",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              items: [
-                {
-                  itemType: "Asset",
-                  id: assetId
-                }
-              ]
-            })
-          }
-        );
-
-        const itemData = await itemResponse.json();
-        const item = itemData.data?.[0];
-
-        if (!item) continue;
-
-        const price = item.lowestPrice || item.price || 0;
-
-        totalValue += price;
-
-        items.push({
-          id: item.id,
-          name: item.name,
-          price: price,
-          priceStatus: item.priceStatus || null
-        });
-      } catch (error) {
-        console.log(`Failed to load asset ${assetId}`);
-      }
-    }
-
     res.json({
-      userId,
-      totalValue,
-      items
+      userId: userId,
+      avatarData: avatarData
     });
   } catch (error) {
     console.error(error);
