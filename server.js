@@ -15,14 +15,28 @@ app.get("/avatar-value/:userId", async (req, res) => {
       `https://avatar.roblox.com/v1/users/${userId}/currently-wearing`
     );
 
+    if (!avatarResponse.ok) {
+      return res.status(404).json({
+        error: "Roblox user not found"
+      });
+    }
+
     const avatarData = await avatarResponse.json();
 
-    const assetIds = avatarData.assetIds;
-
     const itemResponse = await fetch(
-      `https://catalog.roblox.com/v1/search/items/details?${assetIds
-        .map((id) => `AssetId=${id}`)
-        .join("&")}`
+      "https://catalog.roblox.com/v1/catalog/items/details",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          items: avatarData.assetIds.map((id) => ({
+            itemType: "Asset",
+            id: id
+          }))
+        })
+      }
     );
 
     const itemData = await itemResponse.json();
@@ -31,21 +45,22 @@ app.get("/avatar-value/:userId", async (req, res) => {
     const items = [];
 
     for (const item of itemData.data || []) {
-      const price = item.price || item.lowestPrice || 0;
+      const price = item.lowestPrice || item.price || 0;
 
       totalValue += price;
 
       items.push({
         id: item.id,
         name: item.name,
-        price: price
+        price: price,
+        priceStatus: item.priceStatus || null
       });
     }
 
     res.json({
-      userId: userId,
-      totalValue: totalValue,
-      items: items
+      userId,
+      totalValue,
+      items
     });
   } catch (error) {
     console.error(error);
